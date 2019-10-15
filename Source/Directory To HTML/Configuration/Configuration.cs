@@ -109,6 +109,16 @@ namespace DirectoryToHtml.Config
         [Description("Choose how the information will be ordered")]
         public OrderBy_e OrderBy { get; set; }
 
+        [Category("Filters")]
+        [DisplayName("Exclude folder name containing:")]
+        [Description("Excludes all folder names containing the input string. Separate names with ;")]
+        public string FilterExcludeFolderName { get; set; }
+
+        [Category("Filters")]
+        [DisplayName("Exclude file name containing:")]
+        [Description("Excludes all file names containing the input string. Separate names with ;")]
+        public string FilterExcludeFileName { get; set; }
+
         /// <summary>
         /// OrderBy Possibilities
         /// </summary>
@@ -160,6 +170,7 @@ namespace DirectoryToHtml.Config
             enable_sizeGiB = false;
             enable_creationDate = true;
             enable_lastModificationDate = false;
+            FilterExcludeFileName = "desktop.ini;";
 
             // Create Save Location
             Directory.CreateDirectory(Directory.GetCurrentDirectory() + "\\bin");

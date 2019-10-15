@@ -219,7 +219,7 @@ namespace DirectoryToHtml
         private void bgWorker_DoWork(object sender, DoWorkEventArgs e)
         {
             // Scan Folder
-            ScanFolder sf = new ScanFolder(conf.selectedFolder, "*");
+            ScanFolder sf = new ScanFolder(conf.selectedFolder, "*", conf);
             sf.NewScanFolderUpdate += OnNewScanFolderUpdate;
             sf.Scan(((BackgroundWorker)sender).CancellationPending);
 

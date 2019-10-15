@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Diagnostics;
+using DirectoryToHtml.Config;
 
 namespace DirectoryToHtml.Utils
 {
@@ -90,14 +91,22 @@ namespace DirectoryToHtml.Utils
         private Stopwatch _totalTime = new Stopwatch();
 
         /// <summary>
+        /// Configuration
+        /// </summary>
+        private Configuration _configuration;
+
+        /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="directory"></param>
         /// <param name="searchPattern"></param>
-        public ScanFolder(string directory, string searchPattern)
+        public ScanFolder(string directory, string searchPattern, Configuration conf)
         {
             // List of Files
             Files = new List<FileInfoAdvanced>();
+
+            // Configuration
+            _configuration = conf;
 
             // Get Values
             Directory = directory;
@@ -217,6 +226,59 @@ namespace DirectoryToHtml.Utils
         }
 
         /// <summary>
+        /// Split Comma (;) Separated Value
+        /// </summary>
+        /// <param name="csv">CSV String</param>
+        /// <returns>List of Values</returns>
+        private List<string> SplitCsv(string csv)
+        {
+            if (!String.IsNullOrWhiteSpace(csv))
+            {
+                var split = csv.Split(';').ToList();
+                split.RemoveAll(x => String.IsNullOrWhiteSpace(x));
+                var fRet = new List<String>();
+                foreach (var val in split)
+                    fRet.Add(val.Trim());
+                return fRet;
+            }
+            return new List<string>();
+        }
+
+        /// <summary>
+        /// Indicates if the folder must be filtered or used
+        /// </summary>
+        /// <param name="fileName">Folder Name</param>
+        /// <returns>true: Folder is filtered, must be ignored</returns>
+        /// <returns>false: Folder is not filtered, must be consumed</returns>
+        private bool IsFolderFiltered(string folderName)
+        {
+            var valuesToFilter = SplitCsv(_configuration.FilterExcludeFolderName);
+            foreach (var valueFilter in valuesToFilter)
+            {
+                if (folderName.Contains(valueFilter))
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Indicates if the file must be filtered or used
+        /// </summary>
+        /// <param name="fileName">File Name</param>
+        /// <returns>true: File is filtered, must be ignored</returns>
+        /// <returns>false: File is not filtered, must be consumed</returns>
+        private bool IsFileFiltered(string fileName)
+        {
+            var valuesToFilter = SplitCsv(_configuration.FilterExcludeFileName);
+            foreach (var valueFilter in valuesToFilter)
+            {
+                if (fileName.Contains(valueFilter))
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Get Information
         /// </summary>
         /// <param name="dir"></param>
@@ -237,12 +299,16 @@ namespace DirectoryToHtml.Utils
 
                     string removeString = Directory;
                     string currentDir = f.DirectoryName + "\\";
+                    if (IsFolderFiltered(currentDir))
+                        continue; // Skip
                     int index = currentDir.IndexOf(removeString);
                     string cleanPath = (index < 0)
                         ? currentDir
                         : currentDir.Remove(index, removeString.Length);
 
                     FileInfoAdvanced fia = new FileInfoAdvanced(f, cleanPath);
+                    if (IsFileFiltered(fia.FileName))
+                        continue; // Skip
                     Files.Add(fia);
 
                     _currentFileID++;
